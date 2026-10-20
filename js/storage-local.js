@@ -45,22 +45,72 @@ function createId(prefix) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+const USERS_KEY = "salary-tracker-users";
+const SESSION_KEY = "salary-tracker-session";
+
+function getUsers() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+function readSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
 export const localStorageApi = {
   mode: "local",
 
   async me() {
-    return { user: { id: "local", email: "Локальный режим" } };
+    const session = readSession();
+    if (!session?.email) {
+      return { user: null };
+    }
+    return { user: { id: session.id, email: session.email } };
   },
 
-  async login() {
+  async login(email, password) {
+    const normalized = String(email || "").trim().toLowerCase();
+    const user = getUsers().find((item) => item.email === normalized);
+    if (!user || user.password !== String(password || "")) {
+      throw new Error("Неверный email или пароль");
+    }
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, email: user.email }));
     return this.me();
   },
 
-  async register() {
+  async register(email, password) {
+    const normalized = String(email || "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      throw new Error("Введите корректный email");
+    }
+    if (String(password || "").length < 6) {
+      throw new Error("Пароль должен быть не короче 6 символов");
+    }
+    const users = getUsers();
+    if (users.some((item) => item.email === normalized)) {
+      throw new Error("Этот email уже зарегистрирован");
+    }
+    const user = { id: createId("user"), email: normalized, password: String(password) };
+    users.push(user);
+    saveUsers(users);
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, email: user.email }));
     return this.me();
   },
 
   async logout() {
+    localStorage.removeItem(SESSION_KEY);
     return { ok: true };
   },
 

@@ -352,8 +352,11 @@ themeToggle.addEventListener("click", () => {
 });
 
 document.querySelector("#logout-btn").addEventListener("click", async () => {
-  await storage.logout();
-  location.href = pageHref("login.html");
+  try {
+    await storage.logout();
+  } finally {
+    location.replace(pageHref("login.html"));
+  }
 });
 
 async function boot() {

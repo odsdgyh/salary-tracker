@@ -8,7 +8,7 @@ const mode = document.body.dataset.auth;
 try {
   const session = await storage.me();
   if (session?.user) {
-    location.href = pageHref("index.html");
+    location.replace(pageHref("index.html"));
   }
 } catch {
   // not signed in
@@ -25,7 +25,7 @@ form.addEventListener("submit", async (event) => {
     } else {
       await storage.login(email, password);
     }
-    location.href = pageHref("index.html");
+    location.replace(pageHref("index.html"));
   } catch (error) {
     errorBox.textContent = error.message;
   }
