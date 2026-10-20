@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Трекер доходов и расходов</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script>
+      document.documentElement.dataset.theme =
+        localStorage.getItem("salary-tracker-theme") || "light";
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <strong>Salary Tracker</strong>
+          <span>Доходы и расходы, сум</span>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn is-active" data-nav="dashboard" type="button">Дашборд</button>
+          <button class="nav-btn" data-nav="transactions" type="button">Операции</button>
+          <button class="nav-btn" data-nav="categories" type="button">Категории</button>
+        </nav>
+        <div class="sidebar-user">
+          <span id="user-email"></span>
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
+            Тёмная тема
+          </button>
+          <button id="logout-btn" class="theme-toggle" type="button">Выйти</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="view is-visible" data-view="dashboard">
+          <div class="view-head">
+            <div>
+              <h1>Дашборд</h1>
+              <p>Итоги за выбранный месяц</p>
+            </div>
+            <label class="field">
+              Месяц
+              <input id="dashboard-month" type="month" />
+            </label>
+          </div>
+          <div class="cards">
+            <article class="card income">
+              <h2>Доходы</h2>
+              <div id="stat-income" class="value">0 сум</div>
+            </article>
+            <article class="card expense">
+              <h2>Расходы</h2>
+              <div id="stat-expense" class="value">0 сум</div>
+            </article>
+            <article class="card">
+              <h2>Баланс</h2>
+              <div id="stat-balance" class="value">0 сум</div>
+            </article>
+          </div>
+          <div class="charts">
+            <article class="chart-card">
+              <h2>Доходы и расходы по дням</h2>
+              <div class="chart-wrap">
+                <canvas id="bar-chart"></canvas>
+              </div>
+            </article>
+            <article class="chart-card">
+              <h2>Расходы по категориям</h2>
+              <div class="chart-wrap">
+                <canvas id="pie-chart"></canvas>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-view="transactions">
+          <div class="view-head">
+            <div>
+              <h1>Операции</h1>
+              <p>Добавление, изменение и удаление доходов и расходов</p>
+            </div>
+            <button id="add-transaction" class="btn" type="button">Добавить</button>
+          </div>
+          <div class="filters">
+            <label class="field">
+              Тип
+              <select id="filter-type">
+                <option value="all">Все</option>
+                <option value="income">Доход</option>
+                <option value="expense">Расход</option>
+              </select>
+            </label>
+            <label class="field">
+              С
+              <input id="filter-from" type="date" />
+            </label>
+            <label class="field">
+              По
+              <input id="filter-to" type="date" />
+            </label>
+          </div>
+          <div class="panel table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Тип</th>
+                  <th>Категория</th>
+                  <th>Сумма</th>
+                  <th>Комментарий</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="transactions-body"></tbody>
+            </table>
+            <div id="transactions-empty" class="empty">Пока нет операций</div>
+          </div>
+        </section>
+
+        <section class="view" data-view="categories">
+          <div class="view-head">
+            <div>
+              <h1>Категории</h1>
+              <p>Категории для доходов и расходов</p>
+            </div>
+            <button id="add-category" class="btn" type="button">Добавить</button>
+          </div>
+          <div id="categories-body" class="category-grid"></div>
+          <div id="categories-empty" class="empty">Пока нет категорий</div>
+        </section>
+      </main>
+    </div>
+
+    <div id="transaction-modal" class="modal" role="dialog" aria-modal="true">
+      <form id="transaction-form" class="modal-card">
+        <h2 id="transaction-modal-title">Новая операция</h2>
+        <div class="form-grid">
+          <label class="field">
+            Тип
+            <select id="tx-type" name="type" required>
+              <option value="income">Доход</option>
+              <option value="expense">Расход</option>
+            </select>
+          </label>
+          <label class="field">
+            Сумма, сум
+            <input id="tx-amount" name="amount" type="number" min="0.01" step="0.01" required />
+          </label>
+          <label class="field">
+            Категория
+            <select id="tx-category" name="categoryId" required></select>
+          </label>
+          <label class="field">
+            Дата
+            <input id="tx-date" name="date" type="date" required />
+          </label>
+          <label class="field">
+            Комментарий
+            <textarea id="tx-comment" name="comment" maxlength="200"></textarea>
+          </label>
+        </div>
+        <div id="tx-error" class="form-error"></div>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-close="transaction-modal">Отмена</button>
+          <button class="btn" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="category-modal" class="modal" role="dialog" aria-modal="true">
+      <form id="category-form" class="modal-card">
+        <h2 id="category-modal-title">Новая категория</h2>
+        <div class="form-grid">
+          <label class="field">
+            Название
+            <input id="cat-name" name="name" type="text" maxlength="60" required />
+          </label>
+          <label class="field">
+            Тип
+            <select id="cat-type" name="type" required>
+              <option value="income">Доход</option>
+              <option value="expense">Расход</option>
+            </select>
+          </label>
+        </div>
+        <div id="cat-error" class="form-error"></div>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-close="category-modal">Отмена</button>
+          <button class="btn" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

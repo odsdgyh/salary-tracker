@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вход — Salary Tracker</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script>
+      document.documentElement.dataset.theme =
+        localStorage.getItem("salary-tracker-theme") || "light";
+    </script>
+  </head>
+  <body class="auth-body" data-auth="login">
+    <main class="auth-card">
+      <h1>Вход</h1>
+      <p>Войдите, чтобы видеть свои доходы и расходы</p>
+      <form id="auth-form">
+        <label class="field">
+          Email
+          <input name="email" type="email" required autocomplete="email" />
+        </label>
+        <label class="field">
+          Пароль
+          <input name="password" type="password" required minlength="6" autocomplete="current-password" />
+        </label>
+        <div id="auth-error" class="form-error"></div>
+        <button class="btn" type="submit">Войти</button>
+      </form>
+      <p class="auth-switch">Нет аккаунта? <a href="/register.html">Зарегистрироваться</a></p>
+    </main>
+    <script type="module" src="js/auth-page.js"></script>
+  </body>
+</html>
