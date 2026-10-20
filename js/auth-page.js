@@ -1,4 +1,5 @@
 import { storage } from "./storage.js";
+import { pageHref } from "./paths.js";
 
 const form = document.querySelector("#auth-form");
 const errorBox = document.querySelector("#auth-error");
@@ -7,7 +8,7 @@ const mode = document.body.dataset.auth;
 try {
   const session = await storage.me();
   if (session?.user) {
-    location.href = "/";
+    location.href = pageHref("index.html");
   }
 } catch {
   // not signed in
@@ -24,7 +25,7 @@ form.addEventListener("submit", async (event) => {
     } else {
       await storage.login(email, password);
     }
-    location.href = "/";
+    location.href = pageHref("index.html");
   } catch (error) {
     errorBox.textContent = error.message;
   }

@@ -1,6 +1,8 @@
 import { api } from "./api.js";
+import { isGitHubPages } from "./paths.js";
+import { localStorageApi } from "./storage-local.js";
 
-export const storage = {
+const remote = {
   me() {
     return api("/api/me", { redirectOn401: false });
   },
@@ -49,3 +51,5 @@ export const storage = {
     return api(`/api/transactions/${id}`, { method: "DELETE" });
   },
 };
+
+export const storage = isGitHubPages() ? localStorageApi : remote;

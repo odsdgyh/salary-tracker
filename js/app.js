@@ -1,4 +1,5 @@
 import { storage } from "./storage.js";
+import { pageHref } from "./paths.js";
 import {
   currentMonthValue,
   daysInMonth,
@@ -352,7 +353,7 @@ themeToggle.addEventListener("click", () => {
 
 document.querySelector("#logout-btn").addEventListener("click", async () => {
   await storage.logout();
-  location.href = "/login.html";
+  location.href = pageHref("login.html");
 });
 
 async function boot() {
@@ -361,13 +362,13 @@ async function boot() {
   try {
     const session = await storage.me();
     if (!session?.user) {
-      location.href = "/login.html";
+      location.href = pageHref("login.html");
       return;
     }
     document.querySelector("#user-email").textContent = session.user.email;
     await refresh();
   } catch {
-    location.href = "/login.html";
+    location.href = pageHref("login.html");
   }
 }
 

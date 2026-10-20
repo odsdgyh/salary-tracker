@@ -1,3 +1,5 @@
+import { pageHref } from "./paths.js";
+
 export async function api(path, { method = "GET", body, redirectOn401 = true } = {}) {
   const response = await fetch(path, {
     method,
@@ -7,7 +9,7 @@ export async function api(path, { method = "GET", body, redirectOn401 = true } =
   });
   const data = await response.json().catch(() => ({}));
   if (response.status === 401 && redirectOn401) {
-    location.href = "/login.html";
+    location.href = pageHref("login.html");
     throw new Error(data.error || "Нужно войти в аккаунт");
   }
   if (!response.ok) {
