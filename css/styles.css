@@ -24,6 +24,7 @@
   --chart-text: #3d4450;
   --chart-grid: rgba(0, 0, 0, 0.08);
   --radius: 16px;
+  --motion: 0.2s ease;
 }
 
 [data-theme="dark"] {
@@ -66,7 +67,7 @@ body {
   font-family: "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background var(--motion), color var(--motion);
 }
 
 button,
@@ -122,26 +123,54 @@ textarea {
   padding: 12px 14px;
   cursor: pointer;
   text-align: left;
+  transition: background var(--motion), color var(--motion), transform var(--motion);
 }
 
-.theme-toggle:hover,
-.theme-toggle[aria-pressed="true"] {
+.theme-toggle:hover {
   background: rgba(255, 255, 255, 0.16);
+}
+
+.theme-toggle.icon-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+[data-theme="light"] .theme-sun,
+[data-theme="dark"] .theme-moon {
+  display: none;
 }
 
 .nav-btn {
   border: 0;
+  outline: none;
+  box-shadow: none;
   background: transparent;
   color: inherit;
   text-align: left;
   padding: 12px 14px;
   border-radius: 10px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background var(--motion);
+}
+
+.nav-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .nav-btn:hover,
+.nav-btn:focus-visible,
 .nav-btn.is-active {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  outline: none;
 }
 
 .main {
@@ -195,6 +224,13 @@ textarea {
     var(--shadow);
 }
 
+.card,
+.chart-card,
+.panel,
+.category-card {
+  transition: transform var(--motion), box-shadow var(--motion);
+}
+
 .card {
   padding: 18px 20px;
 }
@@ -217,6 +253,26 @@ textarea {
 
 .card.expense .value {
   color: var(--expense);
+}
+
+.delta {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.delta.up {
+  color: var(--income);
+}
+
+.delta.down {
+  color: var(--expense);
+}
+
+.delta.flat,
+.delta.muted {
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .charts {
@@ -287,6 +343,7 @@ textarea {
   cursor: pointer;
   background: var(--accent);
   color: #fff;
+  transition: background var(--motion), transform var(--motion), opacity var(--motion);
 }
 
 .btn:hover {
@@ -320,6 +377,25 @@ td {
   font-size: 14px;
 }
 
+.col-amount,
+td.col-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+tbody tr {
+  animation: row-in var(--motion);
+}
+
+tbody tr.is-leaving {
+  animation: row-out 0.18s ease forwards;
+}
+
+.table-wrap.is-empty table {
+  display: none;
+}
+
 th {
   color: var(--muted);
   font-weight: 600;
@@ -348,13 +424,60 @@ th {
 
 .row-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text);
+  transition: background var(--motion), color var(--motion), transform var(--motion);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-btn.icon-edit:hover {
+  background: var(--input-bg);
+}
+
+.icon-btn.icon-delete {
+  color: var(--muted);
+}
+
+.icon-btn.icon-delete:hover,
+.icon-btn.icon-delete:focus-visible {
+  color: var(--expense);
+  background: var(--expense-bg);
 }
 
 .empty {
   padding: 28px;
   text-align: center;
   color: var(--muted);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-wrap.is-empty .empty,
+.empty.is-visible {
+  display: flex;
+}
+
+.empty p {
+  margin: 0;
 }
 
 .modal {
@@ -444,6 +567,12 @@ th {
   gap: 8px;
 }
 
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .sidebar-user span {
   font-size: 12px;
   color: #93a0b5;
@@ -492,6 +621,33 @@ th {
 
 .auth-switch a {
   color: var(--accent);
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes row-out {
+  to {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 @media (max-width: 980px) {

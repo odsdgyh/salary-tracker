@@ -6,6 +6,8 @@ import {
   formatDate,
   formatSum,
   inMonth,
+  monthDelta,
+  previousMonthValue,
   typeLabel,
 } from "./format.js";
 import { renderBarChart, renderPieChart } from "./charts.js";
@@ -17,6 +19,10 @@ const dashboardMonth = document.querySelector("#dashboard-month");
 const statIncome = document.querySelector("#stat-income");
 const statExpense = document.querySelector("#stat-expense");
 const statBalance = document.querySelector("#stat-balance");
+const statIncomeDelta = document.querySelector("#stat-income-delta");
+const statExpenseDelta = document.querySelector("#stat-expense-delta");
+const statBalanceDelta = document.querySelector("#stat-balance-delta");
+const transactionsWrap = document.querySelector(".table-wrap");
 const barCanvas = document.querySelector("#bar-chart");
 const pieCanvas = document.querySelector("#pie-chart");
 
@@ -94,6 +100,36 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function refreshIcons() {
+  window.lucide?.createIcons();
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function actionButton(kind, attr, id, label, icon) {
+  return `<button class="icon-btn icon-${kind}" type="button" ${attr}="${id}" title="${label}" aria-label="${label}">
+    <i data-lucide="${icon}"></i>
+  </button>`;
+}
+
+function setDelta(el, delta) {
+  el.textContent = delta.text;
+  el.className = `delta ${delta.tone}`;
+}
+
+function monthTotals(yearMonth) {
+  const items = transactions.filter((item) => inMonth(item.date, yearMonth));
+  const income = items
+    .filter((item) => item.type === "income")
+    .reduce((sum, item) => sum + item.amount, 0);
+  const expense = items
+    .filter((item) => item.type === "expense")
+    .reduce((sum, item) => sum + item.amount, 0);
+  return { income, expense, balance: income - expense };
+}
+
 function openTransactionModal(transaction) {
   editingTransactionId = transaction?.id ?? null;
   transactionTitle.textContent = transaction ? "Редактировать операцию" : "Новая операция";
@@ -119,16 +155,15 @@ function renderDashboard() {
   const month = dashboardMonth.value || currentMonthValue();
   dashboardMonth.value = month;
   const monthItems = transactions.filter((item) => inMonth(item.date, month));
-  const income = monthItems
-    .filter((item) => item.type === "income")
-    .reduce((sum, item) => sum + item.amount, 0);
-  const expense = monthItems
-    .filter((item) => item.type === "expense")
-    .reduce((sum, item) => sum + item.amount, 0);
+  const current = monthTotals(month);
+  const previous = monthTotals(previousMonthValue(month));
 
-  statIncome.textContent = formatSum(income);
-  statExpense.textContent = formatSum(expense);
-  statBalance.textContent = formatSum(income - expense);
+  statIncome.textContent = formatSum(current.income);
+  statExpense.textContent = formatSum(current.expense);
+  statBalance.textContent = formatSum(current.balance);
+  setDelta(statIncomeDelta, monthDelta(current.income, previous.income));
+  setDelta(statExpenseDelta, monthDelta(current.expense, previous.expense, true));
+  setDelta(statBalanceDelta, monthDelta(current.balance, previous.balance));
 
   const days = daysInMonth(month);
   const labels = Array.from({ length: days }, (_, i) => String(i + 1));
@@ -174,19 +209,20 @@ function renderTransactions() {
         <td>${formatDate(item.date)}</td>
         <td><span class="badge ${item.type}">${typeLabel(item.type)}</span></td>
         <td>${escapeHtml(category?.name ?? "Без категории")}</td>
-        <td>${formatSum(item.amount)}</td>
+        <td class="col-amount">${formatSum(item.amount)}</td>
         <td>${escapeHtml(item.comment || "—")}</td>
         <td>
           <div class="row-actions">
-            <button class="btn ghost" type="button" data-edit-tx="${item.id}">Изменить</button>
-            <button class="btn danger" type="button" data-del-tx="${item.id}">Удалить</button>
+            ${actionButton("edit", "data-edit-tx", item.id, "Изменить", "pencil")}
+            ${actionButton("delete", "data-del-tx", item.id, "Удалить", "trash-2")}
           </div>
         </td>
       </tr>`;
     })
     .join("");
 
-  transactionsEmpty.style.display = rows.length ? "none" : "block";
+  transactionsWrap.classList.toggle("is-empty", rows.length === 0);
+  refreshIcons();
 }
 
 function renderCategories() {
@@ -198,13 +234,15 @@ function renderCategories() {
           <span class="badge ${item.type}">${typeLabel(item.type)}</span>
         </div>
         <div class="row-actions">
-          <button class="btn ghost" type="button" data-edit-cat="${item.id}">Изменить</button>
-          <button class="btn danger" type="button" data-del-cat="${item.id}">Удалить</button>
+          ${actionButton("edit", "data-edit-cat", item.id, "Изменить", "pencil")}
+          ${actionButton("delete", "data-del-cat", item.id, "Удалить", "trash-2")}
         </div>
       </article>`
     )
     .join("");
-  categoriesEmpty.style.display = categories.length ? "none" : "block";
+  categoriesEmpty.classList.toggle("is-visible", categories.length === 0);
+  categoriesEmpty.style.display = "";
+  refreshIcons();
 }
 
 function renderAll() {
@@ -233,6 +271,7 @@ filterFrom.addEventListener("change", renderTransactions);
 filterTo.addEventListener("change", renderTransactions);
 
 document.querySelector("#add-transaction").addEventListener("click", () => openTransactionModal());
+document.querySelector("#empty-add-transaction").addEventListener("click", () => openTransactionModal());
 document.querySelector("#add-category").addEventListener("click", () => openCategoryModal());
 
 txType.addEventListener("change", () => fillCategoryOptions(txType.value));
@@ -254,6 +293,11 @@ transactionsBody.addEventListener("click", async (event) => {
     openTransactionModal(transactions.find((item) => item.id === editId));
   }
   if (deleteId && confirm("Удалить операцию?")) {
+    const row = event.target.closest("tr");
+    if (row && !prefersReducedMotion()) {
+      row.classList.add("is-leaving");
+      await new Promise((resolve) => setTimeout(resolve, 180));
+    }
     await storage.removeTransaction(deleteId);
     await refresh();
   }
@@ -340,8 +384,11 @@ function currentTheme() {
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem(THEME_KEY, theme);
+  const nextLabel = theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему";
   themeToggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
-  themeToggle.textContent = theme === "dark" ? "Светлая тема" : "Тёмная тема";
+  themeToggle.setAttribute("aria-label", nextLabel);
+  themeToggle.setAttribute("title", nextLabel);
+  refreshIcons();
   if (transactions.length || categories.length) {
     renderDashboard();
   }
@@ -369,6 +416,7 @@ async function boot() {
       return;
     }
     document.querySelector("#user-email").textContent = session.user.email;
+    refreshIcons();
     await refresh();
   } catch {
     location.href = pageHref("login.html");

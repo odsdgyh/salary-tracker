@@ -18,16 +18,35 @@
           <span>Доходы и расходы, сум</span>
         </div>
         <nav class="nav">
-          <button class="nav-btn is-active" data-nav="dashboard" type="button">Дашборд</button>
-          <button class="nav-btn" data-nav="transactions" type="button">Операции</button>
-          <button class="nav-btn" data-nav="categories" type="button">Категории</button>
+          <button class="nav-btn is-active" data-nav="dashboard" type="button">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Дашборд</span>
+          </button>
+          <button class="nav-btn" data-nav="transactions" type="button">
+            <i data-lucide="list"></i>
+            <span>Операции</span>
+          </button>
+          <button class="nav-btn" data-nav="categories" type="button">
+            <i data-lucide="tags"></i>
+            <span>Категории</span>
+          </button>
         </nav>
         <div class="sidebar-user">
           <span id="user-email"></span>
-          <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
-            Тёмная тема
-          </button>
-          <button id="logout-btn" class="theme-toggle" type="button">Выйти</button>
+          <div class="sidebar-actions">
+            <button
+              id="theme-toggle"
+              class="icon-btn theme-toggle"
+              type="button"
+              aria-pressed="false"
+              title="Включить тёмную тему"
+              aria-label="Включить тёмную тему"
+            >
+              <span class="theme-moon"><i data-lucide="moon"></i></span>
+              <span class="theme-sun"><i data-lucide="sun"></i></span>
+            </button>
+            <button id="logout-btn" class="theme-toggle" type="button">Выйти</button>
+          </div>
         </div>
       </aside>
 
@@ -47,14 +66,17 @@
             <article class="card income">
               <h2>Доходы</h2>
               <div id="stat-income" class="value">0 сум</div>
+              <p id="stat-income-delta" class="delta muted">нет данных за прошлый месяц</p>
             </article>
             <article class="card expense">
               <h2>Расходы</h2>
               <div id="stat-expense" class="value">0 сум</div>
+              <p id="stat-expense-delta" class="delta muted">нет данных за прошлый месяц</p>
             </article>
             <article class="card">
               <h2>Баланс</h2>
               <div id="stat-balance" class="value">0 сум</div>
+              <p id="stat-balance-delta" class="delta muted">нет данных за прошлый месяц</p>
             </article>
           </div>
           <div class="charts">
@@ -99,21 +121,24 @@
               <input id="filter-to" type="date" />
             </label>
           </div>
-          <div class="panel table-wrap">
+          <div class="panel table-wrap is-empty">
             <table>
               <thead>
                 <tr>
                   <th>Дата</th>
                   <th>Тип</th>
                   <th>Категория</th>
-                  <th>Сумма</th>
+                  <th class="col-amount">Сумма</th>
                   <th>Комментарий</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="transactions-body"></tbody>
             </table>
-            <div id="transactions-empty" class="empty">Пока нет операций</div>
+            <div id="transactions-empty" class="empty">
+              <p>Пока ничего нет</p>
+              <button id="empty-add-transaction" class="btn" type="button">Добавить</button>
+            </div>
           </div>
         </section>
 
@@ -192,6 +217,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script type="module" src="js/app.js"></script>
   </body>
 </html>
